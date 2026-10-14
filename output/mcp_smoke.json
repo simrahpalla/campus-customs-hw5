@@ -1,0 +1,89 @@
+{
+  "description": "Smoke test of the campus-customs MCP server, called through Claude Code's MCP connection (not by importing the Python functions).",
+  "tested_on": "2026-10-14",
+  "connection": {
+    "config_file": ".mcp.json (Claude Code project root: AI Foundations/)",
+    "server_name": "campus-customs",
+    "command": "hw5/mcp_server/.venv/Scripts/python.exe",
+    "args": ["hw5/mcp_server/server.py"],
+    "transport": "stdio",
+    "database": "hw5/data/campus_customs_new.db (opened read-only)",
+    "running_process_confirmed": "\"C:/Users/simra/OneDrive/Desktop/Yale Fall 2026/AI Foundations/hw5/mcp_server/.venv/Scripts/python.exe\" \"C:/Users/simra/OneDrive/Desktop/Yale Fall 2026/AI Foundations/hw5/mcp_server/server.py\""
+  },
+  "prompt": "okay problem 4: Add the MCP server to the vibe coder and test each tool\n\n* add the MCP server from problem 3  to this project's Claude Code configuration so you can call the tools\n* save the connection json text in .mcp.json at the project root (or however else you prefer to save local MCP server lists) \n* use the actual server entry point and python env and ensure it accesses the database copy  \n* Once you are connected, test each of the three tools through claude code's MCP connection using relevant inputs from the tickets. Calling python functions directly does not count as testing the connection \n* save the test evidence in output/mcp.smoke.json. For every tool, include the prompt requesting the test (you can use this prompt), the tool name, the arguments used, and the actual tool output \n* verify the returned values against database - do not invent outputs or mark unexecuted tests successful.\n* if i need to restart claude or approve the mpc connection before you can call the tools, tell me what exactly to do and pause until the connection is available - then finish the tests and save the evidence",
+  "tests": [
+    {
+      "ticket": 101,
+      "prompt": "Test check_stock_and_pricing through the MCP connection for ticket 101 (Tauhid Zaman wants 1 CC-TEE-WHITE in size S).",
+      "mcp_tool": "mcp__campus-customs__check_stock_and_pricing",
+      "tool_name": "check_stock_and_pricing",
+      "arguments": {"sku": "CC-TEE-WHITE", "size": "S"},
+      "output": {"found":true,"sku":"CC-TEE-WHITE","name":"Classic Bulldog Tee","stock":[{"size":"S","qty":0,"location":"Aisle B"}],"pricing":{"unit_cost":8,"list_price":28,"margin_per_unit":20}},
+      "verification": {
+        "sql": "SELECT i.name, i.qty, i.location, p.unit_cost, p.list_price FROM inventory i JOIN pricing p USING(sku) WHERE i.sku='CC-TEE-WHITE' AND i.size='S'",
+        "db_result": ["Classic Bulldog Tee", 0, "Aisle B", 8.0, 28.0],
+        "matches": true,
+        "notes": "qty 0 confirms size S is out of stock; margin 28 - 8 = 20."
+      },
+      "status": "pass"
+    },
+    {
+      "ticket": 103,
+      "prompt": "Test check_stock_and_pricing through the MCP connection for ticket 103 (Yale AI Club wants 20 CC-HOOD-NAVY in size M at a bulk discount).",
+      "mcp_tool": "mcp__campus-customs__check_stock_and_pricing",
+      "tool_name": "check_stock_and_pricing",
+      "arguments": {"sku": "CC-HOOD-NAVY", "size": "M"},
+      "output": {"found":true,"sku":"CC-HOOD-NAVY","name":"Basic Hoodie Big Yale","stock":[{"size":"M","qty":8,"location":"Aisle A"}],"pricing":{"unit_cost":22,"list_price":58,"margin_per_unit":36}},
+      "verification": {
+        "sql": "SELECT i.name, i.qty, i.location, p.unit_cost, p.list_price FROM inventory i JOIN pricing p USING(sku) WHERE i.sku='CC-HOOD-NAVY' AND i.size='M'",
+        "db_result": ["Basic Hoodie Big Yale", 8, "Aisle A", 22.0, 58.0],
+        "matches": true,
+        "notes": "8 on hand vs 20 requested = 12 short; margin 58 - 22 = 36."
+      },
+      "status": "pass"
+    },
+    {
+      "ticket": [101, 103],
+      "prompt": "Test check_vendor_status through the MCP connection for Bulldog Print Co (vendor 1), the apparel vendor linked to ticket 101 via invoice 501 and needed for the ticket 103 hoodie restock.",
+      "mcp_tool": "mcp__campus-customs__check_vendor_status",
+      "tool_name": "check_vendor_status",
+      "arguments": {"vendor_id": 1},
+      "output": {"found":true,"shop_date":"2026-08-31","vendors":[{"vendor_id":1,"name":"Bulldog Print Co","specialty":"apparel reprint","lead_days":5,"open_invoices":[{"id":501,"amount":840,"due_date":"2026-08-28","status":"open","description":"Rush reprint CC-TEE-WHITE S","days_overdue":3,"overdue":true}],"open_balance":840,"can_ship_new_orders":false}]},
+      "verification": {
+        "sql": "SELECT v.*, inv.id, inv.amount, inv.due_date, inv.status, inv.description, julianday((SELECT date_today FROM desk)) - julianday(inv.due_date) FROM vendors v LEFT JOIN invoices inv ON inv.vendor_id = v.id AND inv.status = 'open' WHERE v.id = 1",
+        "db_result": [1, "Bulldog Print Co", "apparel reprint", 5, 501, 840.0, "2026-08-28", "open", "Rush reprint CC-TEE-WHITE S", 3.0],
+        "matches": true,
+        "notes": "desk.date_today = 2026-08-31, so invoice 501 is 3 days overdue; an open invoice means the vendor cannot ship (can_ship_new_orders = false)."
+      },
+      "status": "pass"
+    },
+    {
+      "ticket": 102,
+      "prompt": "Test check_rent_due through the MCP connection for ticket 102 (Elm City Properties rent notice, lease 1).",
+      "mcp_tool": "mcp__campus-customs__check_rent_due",
+      "tool_name": "check_rent_due",
+      "arguments": {"lease_id": 1},
+      "output": {"found":true,"lease_id":1,"space_name":"Chapel Street shop","landlord":"Elm City Properties","monthly_rent":2400,"next_due":"2026-09-02","notes":null,"shop_date":"2026-08-31","cash_accounts":[{"name":"checking","balance":3400,"date":"2026-08-31"}],"days_until_due":2,"overdue":false,"any_account_covers_rent":true},
+      "verification": {
+        "sql": [
+          "SELECT *, julianday(next_due) - julianday((SELECT date_today FROM desk)) FROM leases WHERE id = 1",
+          "SELECT * FROM cash_accounts"
+        ],
+        "db_result": [
+          [1, "Chapel Street shop", "Elm City Properties", 2400.0, "2026-09-02", null, 2.0],
+          ["checking", 3400.0, "2026-08-31"]
+        ],
+        "matches": true,
+        "notes": "Due in 2 days by shop date (matches ticket 'rent due in 2 days'); 3400 >= 2400 so cash covers rent."
+      },
+      "status": "pass"
+    }
+  ],
+  "summary": {
+    "tools_tested": ["check_stock_and_pricing", "check_vendor_status", "check_rent_due"],
+    "mcp_calls": 4,
+    "passed": 4,
+    "failed": 0,
+    "database_unchanged": "MD5 of campus_customs.db and campus_customs_new.db identical (46effb90d8811f03e219ea9b5fbdfa5a) after the tests; tools are read-only."
+  }
+}

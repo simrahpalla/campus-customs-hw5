@@ -1,0 +1,79 @@
+{
+  "description": "Actual results of the Problem 9 run (one reset at the start, no reset between tickets). Built from output/audit_trail.json (entries after index 233) and data/campus_customs_new.db. Every agent call used gpt-6-luna via Portkey.",
+  "shop_date": "2026-08-31",
+  "starting_checking_balance": 3400.0,
+  "ending_checking_balance": 152.0,
+  "cash_reconciled": "3400.00 - 840.00 - 2400.00 - 8.00 = 152.00, which matches cash_accounts.checking",
+  "tickets": [
+    {
+      "ticket_id": 101,
+      "subject": "Bulldog tee (1 x CC-TEE-WHITE size S for Tauhid Zaman)",
+      "final_status": "resolved",
+      "outcome": "Size S was out of stock. Overdue invoice 501 was paid to unblock Bulldog Print Co, then a 1-unit restock purchase order ($8, earliest arrival 2026-09-05) was paid. Customer draft #3 tells Tauhid the restock is paid and the date is an estimate.",
+      "cash_change": -848.0,
+      "runs": [
+        {"run_id": "721c779fd208", "result": "blocked", "note": "Waited on a customer reply that cannot arrive (drafts are never sent)."},
+        {"run_id": "4e2821ecc0fc", "result": "crashed", "note": "PermissionError replacing audit_trail.json (file briefly locked) after PO request #3 was queued and approved. No run_end entry."},
+        {"run_id": "45f85e523e29", "result": "resolved"}
+      ],
+      "agent_contributions": {
+        "Boss": "Assigned stock, invoice and draft work; blocked the ticket in run 1; after the completion rules were added, asked for the 1-unit purchase order, confirmed both payments were executed and resolved the ticket.",
+        "Inventory": "Confirmed 0 on hand for CC-TEE-WHITE S (1-unit shortfall, $8 restock), matched Bulldog Print Co (5-day lead) and reported it was blocked by invoice 501 and later able to ship. Handed invoice 501 to Accounting.",
+        "Accounting": "Checked invoice 501 and cash, queued request #1 (invoice 501, $840), later queued request #3 (purchase order 1 x CC-TEE-WHITE S, $8) and verified both were executed with $152 left.",
+        "Facilities": "Not involved.",
+        "Customer Service": "Saved draft #1 (out of stock, asked whether to wait) and the final draft #3 (restock paid, earliest arrival 2026-09-05 as an estimate). Nothing was sent."
+      },
+      "human_approvals": [
+        {"request_id": 1, "payment_id": 1, "kind": "invoice", "payee": "Bulldog Print Co", "what": "Overdue invoice 501 (rush reprint CC-TEE-WHITE S, due 2026-08-28)", "amount": 840.0, "approved_by": "Simrah", "approved_at_utc": "2026-10-14T22:40:32Z", "balance_after": 2560.0},
+        {"request_id": 3, "payment_id": 3, "kind": "purchase_order", "payee": "Bulldog Print Co", "what": "Purchase order: 1 x CC-TEE-WHITE size S (PO invoice #502, ETA 2026-09-05)", "amount": 8.0, "approved_by": "Simrah", "approved_at_utc": "2026-10-14T22:55:16Z", "balance_after": 152.0}
+      ]
+    },
+    {
+      "ticket_id": 102,
+      "subject": "Rent due (Elm City Properties, lease 1)",
+      "final_status": "resolved",
+      "outcome": "The notice matched lease 1 ($2,400, due 2026-09-02). Rent request #2 was approved and paid, lease next_due moved to 2026-10-02, and the Boss resolved the ticket in the same run.",
+      "cash_change": -2400.0,
+      "runs": [
+        {"run_id": "ec82eb3fc950", "result": "failed to start", "note": "MCP server session failed to initialize while ticket 101 was running. No agent ran and nothing changed."},
+        {"run_id": "5d1c78f55b0e", "result": "resolved"}
+      ],
+      "agent_contributions": {
+        "Boss": "Sent the ticket to Facilities, cross-checked cash and requests, saw request #2 executed after the human approval and resolved the ticket.",
+        "Inventory": "Not involved.",
+        "Accounting": "Queued request #2 (rent, lease 1, $2,400) for human approval, noting $160 would remain.",
+        "Facilities": "Verified lease 1 against the notice (amount, landlord, due 2026-09-02, 2 days out, cash covers it) and handed the payment to Accounting.",
+        "Customer Service": "Not involved."
+      },
+      "human_approvals": [
+        {"request_id": 2, "payment_id": 2, "kind": "rent", "payee": "Elm City Properties", "what": "Chapel Street shop rent for the period due 2026-09-02", "amount": 2400.0, "approved_by": "Simrah", "approved_at_utc": "2026-10-14T22:46:10Z", "balance_after": 160.0}
+      ]
+    },
+    {
+      "ticket_id": 103,
+      "subject": "Bulk hoodie discount (20 x CC-HOOD-NAVY size M for Yale AI Club)",
+      "final_status": "resolved",
+      "outcome": "8 of 20 were in stock. The 12-unit restock ($264) exceeded the cash left ($160, then $152), so no purchase order was made. Final offer: 8 hoodies at $50 each (list $58, cost $22), explained in customer draft #4.",
+      "cash_change": 0.0,
+      "cash_note": "No cash impact: no payment or purchase was requested, and no revenue is modeled.",
+      "runs": [
+        {"run_id": "f69dc5813a1c", "result": "blocked", "note": "Waited on a customer reply or more funds, neither of which can arrive."},
+        {"run_id": "f4ca0bc74c8e", "result": "resolved"}
+      ],
+      "agent_contributions": {
+        "Boss": "Chose the $50 above-cost price and the 8-unit partial offer, decided not to fund the restock, and resolved the ticket in run 2. The price was compared with the $22 unit cost from check_stock_and_pricing; check_discount_margin was not called.",
+        "Inventory": "Confirmed 8 on hand and a 12-unit shortfall ($264 at $22), and that Bulldog Print Co can ship with a 5-day lead. Handed the restock question to Accounting.",
+        "Accounting": "Declined to queue the $264 purchase order because cash was short ($104 short in run 1, $112 in run 2); confirmed there were no pending commitments.",
+        "Facilities": "Not involved.",
+        "Customer Service": "Saved draft #2 (offer, asked whether to proceed) and the final draft #4 (8 at $50 each; the other 12 can't be supplied now). Nothing was sent."
+      },
+      "human_approvals": []
+    }
+  ],
+  "issues_found": [
+    "Run 4e2821ecc0fc (ticket 101) crashed with PermissionError [WinError 5] while replacing output/audit_trail.json, probably a brief OneDrive or other file lock. It has no run_end entry and one audit entry was lost. Fixed in backend/audit.py: retries, an in-memory backlog, and audit failures no longer crash agent runs.",
+    "Run ec82eb3fc950 (ticket 102) failed to start: 'Client failed to connect: Failed to initialize server session'. No agent work and no database change. The cause was not confirmed.",
+    "Runs 721c779fd208 (101) and f69dc5813a1c (103) ended blocked, waiting for customer replies or funds that this simulation can never provide. Completion rules were added to backend/prompts/boss.md and accounting.md before the reruns.",
+    "Earlier drafts #1 (101) and #2 (103) are still on the board alongside the final drafts #3 and #4; drafts cannot be deleted through the MCP tools."
+  ]
+}

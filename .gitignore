@@ -1,0 +1,34 @@
+# Secrets: never commit real keys
+.env
+.env.*
+!.env.example
+
+# Python virtual environments and caches
+.venv/
+venv/
+**/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node / frontend build output
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+
+# Temporary files written by the audit logger (the audit_trail.json itself IS committed)
+output/*.tmp
+output/*.json.lock
+output/audit_trail.corrupt-*.json
+
+# Editor / OS clutter
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# The original data zip (its contents are committed in data/)
+*.zip
+
+# NOTE: data/campus_customs.db and data/campus_customs_new.db are required and committed.

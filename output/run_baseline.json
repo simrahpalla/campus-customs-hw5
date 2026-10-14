@@ -1,0 +1,17 @@
+{
+  "description": "Starting point for the Problem 9 full run, captured right after POST /api/reset (before any ticket was run).",
+  "reset_at_utc": "2026-10-14T22:36:40.123+00:00",
+  "reset_audit_index": 233,
+  "audit_note": "Entries 0-232 are earlier test runs and were preserved. Problem 9 evidence is every audit entry with index > 233.",
+  "shop_date": "2026-08-31",
+  "starting_checking_balance": 3400.0,
+  "starting_state": {
+    "tickets": {"101": "open", "102": "open", "103": "open"},
+    "payments_rows": 0,
+    "payment_requests_rows": 0,
+    "invoice_501_status": "open",
+    "lease_1_next_due": "2026-09-02"
+  },
+  "original_db_md5": "46effb90d8811f03e219ea9b5fbdfa5a",
+  "model": "gpt-6-luna via Portkey"
+}
